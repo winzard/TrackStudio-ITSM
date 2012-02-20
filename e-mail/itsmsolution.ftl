@@ -3,8 +3,9 @@
 <#assign task = reason.message.task/>
 <#assign simpleTask = Util.simplify(task)/>
 <#assign product = simpleTask.udfValues["Конфигурационные единицы"]/>
+<#if simpleTask.udfValues["Временное решение"]??>
 <#assign solution = simpleTask.udfValues["Временное решение"]/>
-
+</#if>
 <html>
 <body>
 <h2>Ваш инцидент решен</h2>

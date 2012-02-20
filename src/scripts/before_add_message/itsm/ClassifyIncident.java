@@ -58,29 +58,23 @@ public class ClassifyIncident  extends NewIncidentProcessing implements Operatio
         {
             if (client == null) {
                     Object value = oldClientUDFValue.getValue();
-                    List<SecuredUserBean> clients = null;
                     if (value != null) {
-                        clients = (List<SecuredUserBean>) value;
-                        String products = "";
-                        for (SecuredUserBean p : clients) {
-                            products += ";@" + p.getLogin();
-                        }
-                        if (products.length() > 0) client = products.substring(1);
+                        client =  value.toString();
                     }
             }
         }
         
         String usedPriority = setPriority(message);
         SecuredUserBean clientUser = message.getSecure().getUser();
-        if (client!=null && client.length()>0) clientUser = AdapterManager.getInstance().getSecuredUserAdapterManager().findByLogin(message.getSecure(), client.substring(1));
+        if (client!=null && client.length()>0) 
+        	clientUser = AdapterManager.getInstance().getSecuredUserAdapterManager().findByName(message.getSecure(), client);
         else {
-            message.setUdfValue(clientUDFName, "@"+clientUser.getLogin());
+            message.setUdfValue(clientUDFName, clientUser.getName());
         }
 
             StringBuffer bf = new StringBuffer();
             bf.append("электронная почта: ").append(clientUser.getEmail()).append("\r\n");
             bf.append("телефон: ").append(clientUser.getTel()).append("\r\n");
-            bf.append("имя: ").append(clientUser.getName()).append("\r\n");
             bf.append("компания: ").append(clientUser.getCompany()).append("\r\n");
 
 

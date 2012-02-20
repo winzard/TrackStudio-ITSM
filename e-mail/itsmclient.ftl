@@ -24,7 +24,7 @@
     <tr><td>Срок ответа</td><td><#if (task.deadline??)>${DateFormatter.parse(task.deadline)}<#else>${simpleTask.udfValues["Срок решения"]!""}</#if></td></tr>
     <tr><td>Срок решения</td><td>${simpleTask.udfValues["Срок решения"]!""}</td></tr>
     <tr><td>Продукт или услуга</td><td><#if product??>
-<#assign productTask = Util.findTask(product)??/>
+<#assign productTask = Util.findTask(product)/>
 <#if productTask??>
 ${productTask.name}
 </#if>

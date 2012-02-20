@@ -57,10 +57,11 @@ public class AfterCreateWorkaround extends CommonITSM implements OperationTrigge
             problemsInvolved = (List<SecuredTaskBean>) value;
             for (SecuredTaskBean p : problemsInvolved) {
                 SecuredUDFValueBean problemWorkaround = p.getUDFValues().get(PROBLEM_WORKAROND_UDFID);
+                if (problemWorkaround!=null){
                         Object value_ = problemWorkaround.getValue();
                         if (value_ == null)
                             executeOperation(PROBLEM_CONFIRM_OPERATION, p, text, message.getUdfValues());
-
+                }
             }
 
 }

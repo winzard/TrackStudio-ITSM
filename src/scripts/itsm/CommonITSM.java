@@ -29,7 +29,8 @@ public class CommonITSM {
 
     protected String INCIDENT_PRODUCT_UDFID = "4028818212b7e87b0112be28559c0606";
     protected String PROBLEM_PRODUCT_UDFID = "ff80808112bf740e0112bf896aff00e0";
-    protected String INCIDENT_CLIENT_UDFID = "ff8081812e6bb868012e6c5fe88205ae";
+    protected String INCIDENT_CLIENT_UDFID = "ff808181341d98dd01341dea63bf0003";
+    protected String INCIDENT_CLIENTLINK_UDFID = "ff8081812e6bb868012e6c5fe88205ae";
     protected String INCIDENT_CLIENTDATA_UDFID = "ff8081812e6bb868012e6bc433ce0006";
     protected String WORKAROUND_PRODUCT_UDFID = "ff8081812ec813e8012ec823e2940045";
     protected String PRODUCT_CATEGORY_UDFID = "ff8081812e6bb868012e6c45861804a3";
@@ -89,6 +90,7 @@ public class CommonITSM {
             CLIENT_ROLE_ID = properties.getProperty("itsm.client.role");
             CLIENT_ROOT_ID = properties.getProperty("itsm.client.root");
             INCIDENT_CLIENT_UDFID = properties.getProperty("itsm.incident.udf.client");
+            INCIDENT_CLIENTLINK_UDFID = properties.getProperty("itsm.incident.udf.clientlink");
             INCIDENT_CLIENTDATA_UDFID = properties.getProperty("itsm.incident.udf.clientdata");
             INCIDENT_IMPACT_UDFID = properties.getProperty("itsm.incident.udf.impact");
             INCIDENT_URGENCY_UDFID = properties.getProperty("itsm.incident.udf.urgency");

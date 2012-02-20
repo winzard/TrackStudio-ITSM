@@ -34,15 +34,15 @@ public class NewIncidentProcessing extends CommonITSM implements TaskTrigger {
         // now we set first Deadline according with SLA in User custom fields
 
         SecuredUserBean clientUser = task.getSecure().getUser();
-        if (client!=null && client.length()>0) clientUser = AdapterManager.getInstance().getSecuredUserAdapterManager().findByLogin(task.getSecure(), client.substring(1));
+        if (client!=null && client.length()>0) 
+        	clientUser = AdapterManager.getInstance().getSecuredUserAdapterManager().findByName(task.getSecure(), client);
         else {
-            task.setUdfValue(clientUDFName, "@"+clientUser.getLogin());
+            task.setUdfValue(clientUDFName, clientUser.getName());
         }
         
             StringBuffer bf = new StringBuffer();
             bf.append("электронная почта: ").append(clientUser.getEmail()).append("\r\n");
             bf.append("телефон: ").append(clientUser.getTel()).append("\r\n");
-            bf.append("имя: ").append(clientUser.getName()).append("\r\n");
             bf.append("компания: ").append(clientUser.getCompany()).append("\r\n");
 
 
@@ -144,12 +144,13 @@ public class NewIncidentProcessing extends CommonITSM implements TaskTrigger {
     }
 
     protected String introduceNewClient(SecuredTaskTriggerBean task, String clientUDFName, String clientDataUDFName, String client) throws GranException {
-        if (client != null && client.startsWith("@*")) {
+        if (client != null && client.length()>0) {
+        	SecuredUserBean clientUser = AdapterManager.getInstance().getSecuredUserAdapterManager().findByName(task.getSecure(), client);
+        	if (clientUser==null){
             String clientData = task.getUdfValue(clientDataUDFName);
             if (clientData != null && clientData.length() > 0) {
                 String emailPattern = "электронная почта:\\s*\\\"?(\\S+\\s*\\S+[^\\\"])?\\\"?\\s+(<|&lt;)?(([-A-Za-z0-9!#$%&'*+/=?^_`{|}~]+(\\.[-A-Za-z0-9!#$%&'*+/=?^_`{|}~]+)*)@([A-Za-z0-9.]+))(&gt;|>)?\\r\\n";
                 String phonePattern = "телефон:\\s*([0-9\\+\\s\\-\\(\\)]+)+\\r\\n";
-                String namePattern = "имя:\\s*(\\S+[\\s\\S]*?)\\r\\n";
                 String companyPattern = "компания:\\s*(\\S+[\\s\\S]*?)\\r\\n";
 
                 // From: max.vasenkov@gmail.com
@@ -162,23 +163,18 @@ public class NewIncidentProcessing extends CommonITSM implements TaskTrigger {
                 // From: "Максим Васенков" &lt;vasenkov@any.place.com&gt;
                 Pattern emailPat = Pattern.compile(emailPattern);
                 Pattern phonePat = Pattern.compile(phonePattern);
-                Pattern namePat = Pattern.compile(namePattern);
                 Pattern companyPat = Pattern.compile(companyPattern);
                 Matcher emailMat = emailPat.matcher(clientData);
                 Matcher phoneMat = phonePat.matcher(clientData);
-                Matcher nameMat = namePat.matcher(clientData);
                 Matcher companyMat = companyPat.matcher(clientData);
                 String phone = "";
-                String name = "";
+                String name = client;
                 String company = "";
                 if (emailMat.find()) {
                     while (phoneMat.find()) {
                         phone += ", " + phoneMat.group(1);
                     }
                     if (phone.length() > 0) phone = phone.substring(2);
-                    if (nameMat.find()) {
-                        name = nameMat.group(1);
-                    }
                     if (companyMat.find()) {
                         company = companyMat.group(1);
                     }
@@ -202,7 +198,7 @@ public class NewIncidentProcessing extends CommonITSM implements TaskTrigger {
                     }
 
                             AdapterManager.getInstance().getAuthAdapterManager().changePassword(id, pwd);
-                            RegistrationManager.sendRegistrationInfo(UserRelatedManager.getInstance().find(id), pwd);
+                            KernelManager.getRegistration().sendRegisterMessage(id, pwd);
                         } catch (Exception e) {
                             e.printStackTrace();  
                         }
@@ -216,11 +212,11 @@ public class NewIncidentProcessing extends CommonITSM implements TaskTrigger {
                             }
                         }
 
-                        task.setUdfValue(clientUDFName, "@" + userEmail);
-                        return "@"+userEmail;
+                        task.setUdfValue(clientUDFName, name);
+                        return name;
                     }
                 }
-
+            }
             }
         }
         return task.getUdfValue(clientUDFName);
