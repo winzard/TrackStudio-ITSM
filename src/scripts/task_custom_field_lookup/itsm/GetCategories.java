@@ -1,14 +1,15 @@
 package scripts.task_custom_field_lookup.itsm;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import scripts.itsm.CommonITSM;
+
 import com.trackstudio.exception.GranException;
 import com.trackstudio.external.TaskUDFLookupScript;
 import com.trackstudio.secured.SecuredTaskBean;
 import com.trackstudio.secured.SecuredUDFValueBean;
-import scripts.itsm.CommonITSM;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 
 public class GetCategories extends CommonITSM implements TaskUDFLookupScript {

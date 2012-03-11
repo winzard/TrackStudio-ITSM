@@ -1,17 +1,23 @@
 package scripts.before_add_message.itsm;
 
-import com.trackstudio.app.adapter.AdapterManager;
-import com.trackstudio.exception.GranException;
-import com.trackstudio.external.OperationTrigger;
-import com.trackstudio.secured.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import scripts.itsm.CommonITSM;
 import scripts.itsm.assignee.PeekAssigneeStrategy;
 import scripts.itsm.assignee.RandomAssignee;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import com.trackstudio.app.adapter.AdapterManager;
+import com.trackstudio.exception.GranException;
+import com.trackstudio.external.OperationTrigger;
+import com.trackstudio.secured.SecuredMessageTriggerBean;
+import com.trackstudio.secured.SecuredPrstatusBean;
+import com.trackstudio.secured.SecuredTaskBean;
+import com.trackstudio.secured.SecuredTaskTriggerBean;
+import com.trackstudio.secured.SecuredUDFBean;
+import com.trackstudio.secured.SecuredUDFValueBean;
+import com.trackstudio.secured.SecuredUserBean;
 
 
 public class CreateProblem extends CommonITSM implements OperationTrigger {

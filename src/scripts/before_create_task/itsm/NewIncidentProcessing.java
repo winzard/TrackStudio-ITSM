@@ -1,20 +1,23 @@
 package scripts.before_create_task.itsm;
 
-import com.trackstudio.app.adapter.AdapterManager;
-import com.trackstudio.exception.GranException;
-import com.trackstudio.external.TaskTrigger;
-import com.trackstudio.kernel.cache.UserRelatedManager;
-import com.trackstudio.kernel.manager.KernelManager;
-import com.trackstudio.kernel.manager.RegistrationManager;
-import com.trackstudio.secured.*;
-import com.trackstudio.tools.Null;
-import scripts.itsm.CommonITSM;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import scripts.itsm.CommonITSM;
+
+import com.trackstudio.app.adapter.AdapterManager;
+import com.trackstudio.exception.GranException;
+import com.trackstudio.external.TaskTrigger;
+import com.trackstudio.kernel.manager.KernelManager;
+import com.trackstudio.secured.SecuredPriorityBean;
+import com.trackstudio.secured.SecuredTaskTriggerBean;
+import com.trackstudio.secured.SecuredUDFBean;
+import com.trackstudio.secured.SecuredUDFValueBean;
+import com.trackstudio.secured.SecuredUserBean;
+import com.trackstudio.tools.Null;
 
 /**
  * электронная почта: max.vasenkov@gmail.com, m@vasenkov.gmail.com
@@ -24,12 +27,11 @@ import java.util.regex.Pattern;
  */
 public class NewIncidentProcessing extends CommonITSM implements TaskTrigger {
 
-
-    public SecuredTaskTriggerBean execute(SecuredTaskTriggerBean task) throws GranException {
-        String clientUDFName = KernelManager.getFind().findUdf(INCIDENT_CLIENT_UDFID).getCaption();
-        String clientDataUDFName = KernelManager.getFind().findUdf(INCIDENT_CLIENTDATA_UDFID).getCaption();
-        String client = task.getUdfValue(clientUDFName);
-        client = introduceNewClient(task, clientUDFName, clientDataUDFName, client);
+	public SecuredTaskTriggerBean execute(SecuredTaskTriggerBean task) throws GranException {
+        
+        //String clientDataUDFName = KernelManager.getFind().findUdf(INCIDENT_CLIENTDATA_UDFID).getCaption();
+        String client = task.getUdfValue(INCIDENT_CLIENT_UDF);
+        introduceNewClient(task, client);
         String usedPriority = setPriority(task);
         // now we set first Deadline according with SLA in User custom fields
 
@@ -37,55 +39,14 @@ public class NewIncidentProcessing extends CommonITSM implements TaskTrigger {
         if (client!=null && client.length()>0) 
         	clientUser = AdapterManager.getInstance().getSecuredUserAdapterManager().findByName(task.getSecure(), client);
         else {
-            task.setUdfValue(clientUDFName, clientUser.getName());
+            task.setUdfValue(INCIDENT_CLIENT_UDF, clientUser.getName());
+            task.setUdfValue(INCIDENT_EMAIL_UDF, clientUser.getEmail());
+    		task.setUdfValue(INCIDENT_PHONE_UDF, clientUser.getTel());
+    		task.setUdfValue(INCIDENT_COMPANY_UDF, clientUser.getCompany());
         }
         
-            StringBuffer bf = new StringBuffer();
-            bf.append("электронная почта: ").append(clientUser.getEmail()).append("\r\n");
-            bf.append("телефон: ").append(clientUser.getTel()).append("\r\n");
-            bf.append("компания: ").append(clientUser.getCompany()).append("\r\n");
-
-
-            List<SecuredUDFValueBean> udfvalues = clientUser.getUDFValuesList();
-            SecuredUDFBean deadlineUdf = AdapterManager.getInstance().getSecuredFindAdapterManager().findUDFById(task.getSecure(), INCIDENT_DEADLINE_UDFID);
-            for (SecuredUDFValueBean udf : udfvalues) {
-                if (udf.getCaption().equals("SLA - " + usedPriority)) {
-                    // use this one for parameters
-                    Object o = udf.getValue();
-                    if (o != null) {
-                        int hoursAdvance1 = 0;
-                        String sla = o.toString();
-                        String slaPattern = "([0-9]*)\\s?(\\(\\s?([0-9]*)\\s?\\))?";
-                        Pattern slaPat = Pattern.compile(slaPattern);
-                        Matcher patternMat = slaPat.matcher(sla);
-                        if (patternMat.find()) {
-                            String longTerm = patternMat.group(1);
-                            String shortTerm = patternMat.group(3);
-                            if (longTerm != null && longTerm.length() > 0) {
-                                hoursAdvance1 = Integer.parseInt(longTerm);
-                                Calendar longCal = Calendar.getInstance();
-                                longCal.add(Calendar.HOUR, hoursAdvance1);
-                                task.setDeadline(longCal);
-                                String deadline = task.getSecure().getUser().getDateFormatter().parse(longCal);
-                                bf.append("срок завершения: ").append(deadline).append("\r\n");
-                                task.setUdfValue(deadlineUdf.getCaption(), deadline);
-                            }
-                            if (shortTerm != null && shortTerm.length() > 0) {
-                                hoursAdvance1 = Integer.parseInt(shortTerm);
-                                Calendar shortCal = Calendar.getInstance();
-                                shortCal.add(Calendar.HOUR, hoursAdvance1);
-                                task.setDeadline(shortCal);
-                                bf.append("срок реакции: ").append(task.getSecure().getUser().getDateFormatter().parse(shortCal)).append("\r\n");
-                            }
-
-                        }
-                    }
-
-                    break;
-                }
-            }
-
-            task.setUdfValue(clientDataUDFName, bf.toString());
+          List<SecuredUDFValueBean> udfvalues = clientUser.getUDFValuesList();
+          applySLA(task, usedPriority, udfvalues);
 
         if (task.getHandlerUserId()==null){
             // set Assignee
@@ -100,6 +61,47 @@ public class NewIncidentProcessing extends CommonITSM implements TaskTrigger {
         }
         return task;
     }
+
+	public void applySLA(SecuredTaskTriggerBean task, String usedPriority,
+			List<SecuredUDFValueBean> udfvalues) throws GranException {
+		SecuredUDFBean deadlineUdf = AdapterManager.getInstance().getSecuredFindAdapterManager().findUDFById(task.getSecure(), INCIDENT_DEADLINE_UDFID);
+		for (SecuredUDFValueBean udf : udfvalues) {
+		    if (udf.getCaption().equals("SLA - " + usedPriority.trim())) {
+		        // use this one for parameters
+		        Object o = udf.getValue();
+		        if (o != null) {
+		            int hoursAdvance = 0;
+		            String sla = o.toString();
+		            String slaPattern = "([0-9]*)\\s?(\\(\\s?([0-9]*)\\s?\\))?";
+		            Pattern slaPat = Pattern.compile(slaPattern);
+		            Matcher patternMat = slaPat.matcher(sla);
+		            if (patternMat.find()) {
+		                String longTerm = patternMat.group(1);
+		                String shortTerm = patternMat.group(3);
+		                if (longTerm != null && longTerm.length() > 0) {
+		                    hoursAdvance = Integer.parseInt(longTerm);
+		                    Calendar longCal = Calendar.getInstance();
+		                    longCal.add(Calendar.HOUR, hoursAdvance);
+		                    task.setDeadline(longCal);
+		                    String deadline = task.getSecure().getUser().getDateFormatter().parse(longCal);
+		                    
+		                    task.setUdfValue(deadlineUdf.getCaption(), deadline);
+		                }
+		                if (shortTerm != null && shortTerm.length() > 0) {
+		                    hoursAdvance = Integer.parseInt(shortTerm);
+		                    Calendar shortCal = Calendar.getInstance();
+		                    shortCal.add(Calendar.HOUR, hoursAdvance);
+		                    task.setDeadline(shortCal);
+		                    
+		                }
+
+		            }
+		        }
+
+		        break;
+		    }
+		}
+	}
 
     protected int parseInt(String s) {
         Pattern pricePattern = Pattern.compile("\\D*(\\d+)\\D*");
@@ -143,51 +145,22 @@ public class NewIncidentProcessing extends CommonITSM implements TaskTrigger {
         return usedPriority;
     }
 
-    protected String introduceNewClient(SecuredTaskTriggerBean task, String clientUDFName, String clientDataUDFName, String client) throws GranException {
+    protected void introduceNewClient(SecuredTaskTriggerBean task, String client) throws GranException {
         if (client != null && client.length()>0) {
         	SecuredUserBean clientUser = AdapterManager.getInstance().getSecuredUserAdapterManager().findByName(task.getSecure(), client);
         	if (clientUser==null){
-            String clientData = task.getUdfValue(clientDataUDFName);
-            if (clientData != null && clientData.length() > 0) {
-                String emailPattern = "электронная почта:\\s*\\\"?(\\S+\\s*\\S+[^\\\"])?\\\"?\\s+(<|&lt;)?(([-A-Za-z0-9!#$%&'*+/=?^_`{|}~]+(\\.[-A-Za-z0-9!#$%&'*+/=?^_`{|}~]+)*)@([A-Za-z0-9.]+))(&gt;|>)?\\r\\n";
-                String phonePattern = "телефон:\\s*([0-9\\+\\s\\-\\(\\)]+)+\\r\\n";
-                String companyPattern = "компания:\\s*(\\S+[\\s\\S]*?)\\r\\n";
+            String clientEmail = task.getUdfValue(INCIDENT_EMAIL_UDF);
+            String clientPhone = task.getUdfValue(INCIDENT_PHONE_UDF);
+            String clientCompany = task.getUdfValue(INCIDENT_COMPANY_UDF);
+            if (clientEmail != null && clientEmail.length() > 0) {
 
-                // From: max.vasenkov@gmail.com
-                // From: Maxim Vasenkov <max.vasenkov@gmail.com>
-                // From: Maxim Vasenkov &lt;max.vasenkov@gmail.com&gt;
-                // From: Winzard <i@winzard.ru>
-                // From: Admin <admin@localhost>
-                // электронная почта: Denis.Ardan@localhost
-                // From: "Максим Васенков" <vasenkov@any.place.com>
-                // From: "Максим Васенков" &lt;vasenkov@any.place.com&gt;
-                Pattern emailPat = Pattern.compile(emailPattern);
-                Pattern phonePat = Pattern.compile(phonePattern);
-                Pattern companyPat = Pattern.compile(companyPattern);
-                Matcher emailMat = emailPat.matcher(clientData);
-                Matcher phoneMat = phonePat.matcher(clientData);
-                Matcher companyMat = companyPat.matcher(clientData);
-                String phone = "";
-                String name = client;
-                String company = "";
-                if (emailMat.find()) {
-                    while (phoneMat.find()) {
-                        phone += ", " + phoneMat.group(1);
-                    }
-                    if (phone.length() > 0) phone = phone.substring(2);
-                    if (companyMat.find()) {
-                        company = companyMat.group(1);
-                    }
-
-                    String userName = emailMat.group(1);
-                    String userEmail = emailMat.group(3);
-                    if (userName == null) userName = emailMat.group(4);
-                    String fId = KernelManager.getUser().findUserIdByEmailNameProject(userEmail, userEmail, task.getParentId());
+                    
+                    String fId = KernelManager.getUser().findUserIdByEmailNameProject(clientEmail, clientEmail, task.getParentId());
                     if (fId == null) {
                         String id = AdapterManager.getInstance().getSecuredUserAdapterManager().createUser(task.getSecure(),
-                                CLIENT_ROOT_ID, userEmail, name.length() == 0 ? userName : name, Null.beNull(CLIENT_ROLE_ID));
-                        AdapterManager.getInstance().getSecuredUserAdapterManager().updateUser(task.getSecure(), id, userEmail, name.length() == 0 ? userName : name, phone, userEmail,
-                                CLIENT_ROLE_ID, CLIENT_ROOT_ID, task.getSecure().getUser().getTimezone(), task.getSecure().getUser().getLocale(), company, null, null, null, null, true);
+                                CLIENT_ROOT_ID, clientEmail, client, Null.beNull(CLIENT_ROLE_ID));
+                        AdapterManager.getInstance().getSecuredUserAdapterManager().updateUser(task.getSecure(), id, clientEmail, client, clientPhone, clientEmail,
+                                CLIENT_ROLE_ID, CLIENT_ROOT_ID, task.getSecure().getUser().getTimezone(), task.getSecure().getUser().getLocale(), clientCompany, null, null, null, null, true);
                         try {
                             String pwd = "";
                               for (int i = 0; i < 7; ++i) {
@@ -212,13 +185,15 @@ public class NewIncidentProcessing extends CommonITSM implements TaskTrigger {
                             }
                         }
 
-                        task.setUdfValue(clientUDFName, name);
-                        return name;
                     }
                 }
             }
-            }
+        	else {
+        		task.setUdfValue(INCIDENT_EMAIL_UDF, clientUser.getEmail());
+        		task.setUdfValue(INCIDENT_PHONE_UDF, clientUser.getTel());
+        		task.setUdfValue(INCIDENT_COMPANY_UDF, clientUser.getCompany());
+        	}
         }
-        return task.getUdfValue(clientUDFName);
+        
     }
 }

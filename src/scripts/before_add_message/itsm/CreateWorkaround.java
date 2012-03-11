@@ -1,14 +1,21 @@
 package scripts.before_add_message.itsm;
 
 
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import scripts.itsm.CommonITSM;
+
 import com.trackstudio.app.adapter.AdapterManager;
 import com.trackstudio.exception.GranException;
 import com.trackstudio.external.OperationTrigger;
-import com.trackstudio.secured.*;
-import com.trackstudio.tools.EggBasket;
-import scripts.itsm.CommonITSM;
-
-import java.util.*;
+import com.trackstudio.secured.SecuredMessageTriggerBean;
+import com.trackstudio.secured.SecuredTaskBean;
+import com.trackstudio.secured.SecuredTaskTriggerBean;
+import com.trackstudio.secured.SecuredUDFBean;
+import com.trackstudio.secured.SecuredUDFValueBean;
 
 public class CreateWorkaround extends CommonITSM implements OperationTrigger {
 

@@ -1,16 +1,17 @@
 package scripts.instead_of_add_message.itsm;
 
-import com.trackstudio.app.adapter.AdapterManager;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.ListIterator;
+
+import scripts.itsm.CommonITSM;
+
 import com.trackstudio.exception.GranException;
 import com.trackstudio.external.OperationTrigger;
 import com.trackstudio.kernel.manager.KernelManager;
 import com.trackstudio.secured.SecuredMessageBean;
 import com.trackstudio.secured.SecuredMessageTriggerBean;
-import com.trackstudio.secured.SecuredTaskBean;
-import com.trackstudio.secured.SecuredUDFValueBean;
-import scripts.itsm.CommonITSM;
-
-import java.util.*;
 
 public class MoveToLine extends CommonITSM implements OperationTrigger {
     public SecuredMessageTriggerBean execute(SecuredMessageTriggerBean message) throws GranException {

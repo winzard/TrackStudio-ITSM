@@ -1,15 +1,24 @@
 package scripts.itsm;
 
-import com.trackstudio.app.TriggerManager;
-import com.trackstudio.app.adapter.AdapterManager;
-import com.trackstudio.exception.GranException;
-import com.trackstudio.secured.SecuredTaskBean;
-
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
+
+import com.trackstudio.app.TriggerManager;
+import com.trackstudio.app.adapter.AdapterManager;
+import com.trackstudio.app.session.SessionContext;
+import com.trackstudio.constants.CategoryConstants;
+import com.trackstudio.exception.GranException;
+import com.trackstudio.kernel.manager.KernelManager;
+import com.trackstudio.secured.SecuredPrstatusBean;
+import com.trackstudio.secured.SecuredTaskBean;
+import com.trackstudio.secured.SecuredUDFValueBean;
 
 /**
  * Common class for ITSM configuration
@@ -26,12 +35,21 @@ public class CommonITSM {
 
         }
     }
-
+    public static final String EMAIL_PATTERN = "электронная почта:\\s*\\\"?(\\S+\\s*\\S+[^\\\"])?\\\"?\\s+(<|&lt;)?(([-A-Za-z0-9!#$%&'*+/=?^_`{|}~]+(\\.[-A-Za-z0-9!#$%&'*+/=?^_`{|}~]+)*)@([A-Za-z0-9.]+))(&gt;|>)?\\r?\\n";
+	public static final String PHONE_PATTERN = "телефон:\\s*([0-9\\+\\s\\-\\(\\)]+)+\\r?\\n";
+	public static final String COMPANY_PATTERN = "компания:\\s*(\\S+[\\s\\S]*?)\\r?\\n";
+	
     protected String INCIDENT_PRODUCT_UDFID = "4028818212b7e87b0112be28559c0606";
     protected String PROBLEM_PRODUCT_UDFID = "ff80808112bf740e0112bf896aff00e0";
-    protected String INCIDENT_CLIENT_UDFID = "ff808181341d98dd01341dea63bf0003";
-    protected String INCIDENT_CLIENTLINK_UDFID = "ff8081812e6bb868012e6c5fe88205ae";
+    protected String INCIDENT_CLIENT_UDFID2 = "ff808181341d98dd01341dea63bf0003"; // 11 права тут //ff8081812e6bb868012e6c5fe88205ae 10 права тут
+    protected String INCIDENT_CLIENT_UDF = "Клиент";
+    protected String INCIDENT_CLIENTLINK_UDF = "Ссылка на клиента";
+    protected String INCIDENT_CLIENTLINK_UDFID = "ff8081812e6bb868012e6c5fe88205ae"; 
+    
     protected String INCIDENT_CLIENTDATA_UDFID = "ff8081812e6bb868012e6bc433ce0006";
+    protected String INCIDENT_EMAIL_UDF = "Электронная почта клиента";
+    protected String INCIDENT_COMPANY_UDF = "Компания клиента";
+    protected String INCIDENT_PHONE_UDF = "Контактный телефон";
     protected String WORKAROUND_PRODUCT_UDFID = "ff8081812ec813e8012ec823e2940045";
     protected String PRODUCT_CATEGORY_UDFID = "ff8081812e6bb868012e6c45861804a3";
     protected String CLIENT_ROLE_ID = "402881821204446701124cffdf95036d";
@@ -62,7 +80,7 @@ public class CommonITSM {
     protected String INCIDENT_CONFIRM_OPERATION = "ff8081812e80827a012e80ecbe8c0002";
     protected String PROBLEM_DECLINE_OPERATION = "ff8081812fbfe1d8012fc01e914f0052";
     protected String INCIDENT_DECLINE_OPERATION = "ff8081812ea037d4012ea053997c00d6";
-
+    
 
     protected String WORKAROUND_IN_PROBLEM_OPERATION = "ff8081812f8bd341012f8c988f5a0155";
     protected String WORKAROUND_CLOSE_OPERATION = "000000002f96c5ae012f96ed9a0e0009";
@@ -89,8 +107,13 @@ public class CommonITSM {
             PRODUCT_CATEGORY_UDFID = properties.getProperty("itsm.product.udf.categories");
             CLIENT_ROLE_ID = properties.getProperty("itsm.client.role");
             CLIENT_ROOT_ID = properties.getProperty("itsm.client.root");
-            INCIDENT_CLIENT_UDFID = properties.getProperty("itsm.incident.udf.client");
-            INCIDENT_CLIENTLINK_UDFID = properties.getProperty("itsm.incident.udf.clientlink");
+            
+            INCIDENT_CLIENT_UDF = properties.getProperty("itsm.incident.udf.client");
+            INCIDENT_EMAIL_UDF = properties.getProperty("itsm.incident.udf.email");
+            INCIDENT_COMPANY_UDF = properties.getProperty("itsm.incident.udf.company");
+            INCIDENT_PHONE_UDF = properties.getProperty("itsm.incident.udf.phone");
+            INCIDENT_CLIENTLINK_UDF = properties.getProperty("itsm.incident.udf.clientlink");
+            
             INCIDENT_CLIENTDATA_UDFID = properties.getProperty("itsm.incident.udf.clientdata");
             INCIDENT_IMPACT_UDFID = properties.getProperty("itsm.incident.udf.impact");
             INCIDENT_URGENCY_UDFID = properties.getProperty("itsm.incident.udf.urgency");
@@ -130,10 +153,41 @@ public class CommonITSM {
         }
     }
     
+    protected Object getUDFValueByCaption(SecuredTaskBean t, String caption) throws GranException{
+    	ArrayList<SecuredUDFValueBean> map = t.getUDFValuesList();
+        for (SecuredUDFValueBean u: map){
+        	if (u.getCaption().equals(caption)) return u.getValue();
+        }
+        return null;
+    }
     public String executeOperation(String mstatusId, SecuredTaskBean task, String text, Map<String, String> udfMap) throws GranException {
         if (AdapterManager.getInstance().getSecuredStepAdapterManager().getNextStatus(task.getSecure(), task.getId(), mstatusId)!=null)
        return  TriggerManager.getInstance().createMessage(task.getSecure(), task.getId(), mstatusId, text, null, task.getHandlerUserId(), task.getHandlerGroupId(), null, task.getPriorityId(), task.getDeadline(), task.getBudget(), udfMap!=null ? (HashMap)udfMap: null, true, null );
         else return null;
     }
+    protected void setPermissionUDF(SessionContext sc, String newUDFId, String clientUdfId)
+			throws GranException {
+		// скопировать права с поля Клиент
+		String incidentsRoot = KernelManager.getTask().findByNumber("50");
+		Set<SecuredPrstatusBean> prstatusSet = new TreeSet<SecuredPrstatusBean>(AdapterManager.getInstance().getSecuredPrstatusAdapterManager().getAvailablePrstatusList(sc, sc.getUserId()));
+		for (SecuredPrstatusBean spb : prstatusSet) {
+            if (spb.isAllowedByACL() || spb.getUser().getSecure().allowedByACL(incidentsRoot)) {
+                List<String> types = AdapterManager.getInstance().getSecuredUDFAdapterManager().getUDFRuleList(sc, spb.getId(), clientUdfId);
+                KernelManager.getUdf().resetUDFRule(newUDFId, spb.getId());
+        		for (String type: types)
+        		KernelManager.getUdf().setUDFRule(newUDFId, spb.getId(), type);
+            }
+            }
 
+		
+		// для mstatus нужно отдельно доставать
+		List<String> editableIds = KernelManager.getUdf().getOperationsWhereUDFIsEditable(clientUdfId);
+        List<String> viewableIds = KernelManager.getUdf().getOperationsWhereUDFIsViewable(clientUdfId);
+        
+		for (String mstatusId: editableIds)
+			KernelManager.getUdf().setMstatusUDFRule(newUDFId, mstatusId, CategoryConstants.EDIT_ALL);	
+		
+		for (String mstatusId: viewableIds)
+			KernelManager.getUdf().setMstatusUDFRule(newUDFId, mstatusId, CategoryConstants.VIEW_ALL);
+	}
 }

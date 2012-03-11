@@ -1,5 +1,9 @@
 package scripts.before_add_message.itsm;
 
+import java.util.List;
+
+import scripts.itsm.CommonITSM;
+
 import com.trackstudio.app.adapter.AdapterManager;
 import com.trackstudio.exception.GranException;
 import com.trackstudio.external.OperationTrigger;
@@ -7,13 +11,7 @@ import com.trackstudio.secured.SecuredMessageTriggerBean;
 import com.trackstudio.secured.SecuredTaskBean;
 import com.trackstudio.secured.SecuredUDFBean;
 import com.trackstudio.secured.SecuredUDFValueBean;
-import com.trackstudio.securedkernel.SecuredFindAdapterManager;
 import com.trackstudio.tools.EggBasket;
-import scripts.itsm.CommonITSM;
-
-import java.sql.Array;
-import java.util.ArrayList;
-import java.util.List;
 
 public class CloseProblemAsDuplicate extends CommonITSM implements OperationTrigger {
 

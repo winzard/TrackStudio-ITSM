@@ -1,15 +1,17 @@
 package scripts.after_add_message.itsm;
 
+import java.util.List;
+
+import scripts.itsm.CommonITSM;
+
 import com.trackstudio.app.adapter.AdapterManager;
 import com.trackstudio.exception.GranException;
 import com.trackstudio.external.OperationTrigger;
-import com.trackstudio.secured.*;
+import com.trackstudio.secured.SecuredMessageTriggerBean;
+import com.trackstudio.secured.SecuredTaskBean;
+import com.trackstudio.secured.SecuredUDFBean;
+import com.trackstudio.secured.SecuredUDFValueBean;
 import com.trackstudio.tools.EggBasket;
-import scripts.before_add_message.itsm.ManageAssignee;
-import scripts.itsm.CommonITSM;
-
-import java.util.HashMap;
-import java.util.List;
 
 
 public class OfferWorkaround  extends CommonITSM implements OperationTrigger {

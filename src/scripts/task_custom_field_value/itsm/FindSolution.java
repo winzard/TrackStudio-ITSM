@@ -1,14 +1,20 @@
 package scripts.task_custom_field_value.itsm;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
+
+import scripts.itsm.CommonITSM;
+
 import com.trackstudio.app.adapter.AdapterManager;
 import com.trackstudio.exception.GranException;
 import com.trackstudio.external.TaskUDFValueScript;
 import com.trackstudio.secured.SecuredSearchTaskItem;
 import com.trackstudio.secured.SecuredTaskBean;
 import com.trackstudio.secured.SecuredUDFValueBean;
-import scripts.itsm.CommonITSM;
-
-import java.util.*;
 
 public class FindSolution extends CommonITSM implements TaskUDFValueScript {
     public Object calculate(SecuredTaskBean securedTaskBean) throws GranException {

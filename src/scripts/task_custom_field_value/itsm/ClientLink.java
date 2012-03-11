@@ -17,10 +17,8 @@ public class ClientLink extends CommonITSM implements TaskUDFValueScript {
 
 	@Override
 	public Object calculate(SecuredTaskBean task) throws GranException {
-		HashMap<String, SecuredUDFValueBean> m = task.getUDFValues();
-        SecuredUDFValueBean clientUDFValue = m.get(INCIDENT_CLIENT_UDFID);
-        if (clientUDFValue!=null){
-        Object value = clientUDFValue.getValue();
+		
+        Object value = getUDFValueByCaption(task, INCIDENT_CLIENT_UDF);
         if (value != null) {
         	SecuredUserBean clientUser = AdapterManager.getInstance().getSecuredUserAdapterManager().findByName(task.getSecure(), value.toString());
         	if (clientUser!=null) {
@@ -30,7 +28,7 @@ public class ClientLink extends CommonITSM implements TaskUDFValueScript {
         	}
         }
 		
-	}
+	
 		return null;
 	}
 

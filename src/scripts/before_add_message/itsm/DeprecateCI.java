@@ -1,17 +1,14 @@
 package scripts.before_add_message.itsm;
 
-import com.trackstudio.app.adapter.AdapterManager;
+import java.util.List;
+
+import scripts.itsm.CommonITSM;
+
 import com.trackstudio.exception.GranException;
 import com.trackstudio.external.OperationTrigger;
-import com.trackstudio.secured.*;
-import com.trackstudio.tools.EggBasket;
-import scripts.itsm.CommonITSM;
-import scripts.itsm.assignee.PeekAssigneeStrategy;
-import scripts.itsm.assignee.RandomAssignee;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import com.trackstudio.secured.SecuredMessageTriggerBean;
+import com.trackstudio.secured.SecuredTaskBean;
+import com.trackstudio.secured.SecuredUDFValueBean;
 
 public class DeprecateCI extends CommonITSM implements OperationTrigger {
     public SecuredMessageTriggerBean execute(SecuredMessageTriggerBean message) throws GranException {

@@ -1,15 +1,16 @@
 package scripts.before_add_message.itsm;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+
+import scripts.itsm.CommonITSM;
+
 import com.trackstudio.exception.GranException;
 import com.trackstudio.external.OperationTrigger;
 import com.trackstudio.kernel.manager.KernelManager;
 import com.trackstudio.secured.SecuredMessageBean;
 import com.trackstudio.secured.SecuredMessageTriggerBean;
-import scripts.itsm.CommonITSM;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
 
 /**
 * Триггер возвращает инцидент на первую линию специалисту, который контактировал с клиентом по этому инциденту. А с другой стороны - это лишь один из вариантов распределения,

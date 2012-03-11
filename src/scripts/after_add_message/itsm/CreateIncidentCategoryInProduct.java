@@ -1,16 +1,20 @@
 package scripts.after_add_message.itsm;
 
 
-import com.trackstudio.app.adapter.AdapterManager;
-import com.trackstudio.exception.GranException;
-import com.trackstudio.external.OperationTrigger;
-import com.trackstudio.secured.*;
-import scripts.itsm.CommonITSM;
-import scripts.task_custom_field_lookup.itsm.GetCategories;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import scripts.itsm.CommonITSM;
+import scripts.task_custom_field_lookup.itsm.GetCategories;
+
+import com.trackstudio.app.adapter.AdapterManager;
+import com.trackstudio.exception.GranException;
+import com.trackstudio.external.OperationTrigger;
+import com.trackstudio.secured.SecuredMessageTriggerBean;
+import com.trackstudio.secured.SecuredTaskBean;
+import com.trackstudio.secured.SecuredUDFBean;
+import com.trackstudio.secured.SecuredUDFValueBean;
 
 public class CreateIncidentCategoryInProduct extends CommonITSM implements OperationTrigger {
     public SecuredMessageTriggerBean execute(SecuredMessageTriggerBean message) throws GranException {
