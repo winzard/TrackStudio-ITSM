@@ -13,7 +13,7 @@
 
 Инцидент <b>"${task.name}"</b>, о котором вы сообщили, зарегистрирован в службе поддержки компании TrackStudio.<br>
 <div style="background-color: yellow">Регистрационный номер запроса <b>#${task.number}</b></div><br>
-В настоящее время ваш запрос обрабатывает <#if ((task.getHandlerUserId()?? || task.getHandlerGroupId()??))><#if task.handlerGroup??>${task.handlerGroup.name}<#else>${task.handlerUser.name}</#if></#if>. Специалист службы поддержки свяжется по указанному вами телефону <b>${user.tel}</b>, либо по этому адресу электронной почты в срок до <strong><#if (task.deadline??)>${DateFormatter.parse(task.deadline)}<#else>${simpleTask.udfValues["Срок решения"]!""}</#if></strong>.<br>
+В настоящее время ваш запрос обрабатывает <#if ((task.getHandlerUserId()?? || task.getHandlerGroupId()??))><#if task.handlerGroup??>${task.handlerGroup.name}<#else>${task.handlerUser.name}</#if></#if>. Специалист службы поддержки свяжется с вами <#if (user.tel??)>по указанному телефону <b>${user.tel}</b>, либо </#if>по этому адресу электронной почты в срок до <strong><#if (task.deadline??)>${DateFormatter.parse(task.deadline)}<#else>${simpleTask.udfValues["Срок решения"]!""}</#if></strong>.<br>
 В соответствии с договором, срок решения вашего инцидента <b>${simpleTask.udfValues["Срок решения"]!""}</b><br>
 <br><br>
 

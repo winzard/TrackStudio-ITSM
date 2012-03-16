@@ -10,7 +10,7 @@
 <tr><td>Имя:</td><td>${user.name}</td></tr>
  <tr><td>Компания:</td><td>${company}</td></tr>
 <tr><td>Электронная почта:</td><td>${user.email}</td></tr>
-<tr><td>Контактный телефон:</td><td>${user.tel}</td></tr>
+<#if (user.tel??)><tr><td>Контактный телефон:</td><td>${user.tel}</td></tr></#if>
 </table>
 <div>
     Вы можете войти в систему, перейдя <a href = "${link}/LoginAction.do?method=loginPage">по ссылке</a>. Рекомендуем вам сменить пароль к учетной записи.
