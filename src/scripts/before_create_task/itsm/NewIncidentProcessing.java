@@ -10,6 +10,7 @@ import scripts.itsm.CommonITSM;
 
 import com.trackstudio.app.adapter.AdapterManager;
 import com.trackstudio.exception.GranException;
+import com.trackstudio.exception.UserException;
 import com.trackstudio.external.TaskTrigger;
 import com.trackstudio.kernel.manager.KernelManager;
 import com.trackstudio.secured.SecuredPriorityBean;
@@ -185,9 +186,9 @@ public class NewIncidentProcessing extends CommonITSM implements TaskTrigger {
                             }
                         }
 
-                    }
-                }
-            }
+                    } else throw new UserException("Пользователь с указанным email уже существует. Выберите его из списка или укажите другой email.");
+            } else throw new UserException("Вы должны указать email для нового пользователя");
+        }
         	else {
         		task.setUdfValue(INCIDENT_EMAIL_UDF, clientUser.getEmail());
         		task.setUdfValue(INCIDENT_PHONE_UDF, clientUser.getTel());
