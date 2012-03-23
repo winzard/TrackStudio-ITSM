@@ -1,6 +1,7 @@
 package scripts.after_add_message.itsm;
 
 import java.util.List;
+import java.util.Map.Entry;
 
 import scripts.itsm.CommonITSM;
 
@@ -46,9 +47,9 @@ public class DeclineWorkaround extends CommonITSM implements OperationTrigger {
         SecuredUDFBean relatedUdf = AdapterManager.getInstance().getSecuredFindAdapterManager().findUDFById(task.getSecure(), INCIDENT_RELATED_PROBLEM_UDFID);
         if (refs!=null )
         {
-                for (SecuredUDFValueBean bean : refs.keySet()){
-                    if (bean.getUdfId().equals(relatedUdf.getId())){
-                List<SecuredTaskBean> incidentsInvolved = refs.get(bean);
+            for (Entry<SecuredUDFValueBean, List<SecuredTaskBean>> entry : refs.entrySet()){
+                if (entry.getKey().getUdfId().equals(relatedUdf.getId())){
+            List<SecuredTaskBean> incidentsInvolved = entry.getValue();
                 if (incidentsInvolved != null) {
                     for (SecuredTaskBean p : incidentsInvolved) {
                                     executeOperation(INCIDENT_DECLINE_OPERATION, p, text, message.getUdfValues());

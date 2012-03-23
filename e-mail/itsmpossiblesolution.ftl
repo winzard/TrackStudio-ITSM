@@ -39,10 +39,12 @@ ${Util.getWikiText(solutionTask.description)}
     <tr><td>Срок ответа</td><td><#if (task.deadline??)>${DateFormatter.parse(task.deadline)}</#if></td></tr>
     <tr><td>Срок решения</td><td>${simpleTask.udfValues["Срок решения"]!""}</td></tr>
     <tr><td>Продукт или услуга</td><td><#if product??>
-<#assign productTask = Util.findTask(product)/>
+    <#list product?split(";") as prod>
+<#assign productTask = Util.findTask(prod?trim)/>
 <#if productTask??>
-${productTask.name}
+${productTask.name}<br>
 </#if>
+</#list>
 </#if></td></tr>
     <tr><td>Решение</td><td>
 <#if solutionTask??>
@@ -59,7 +61,6 @@ ${Util.getWikiText(task.description)}
 <br>
 
 Для того, чтобы отписаться от дальнейших оповещений <b>по этому инциденту</b>, <a target="blank" href="${link}/unsubscribe?notificationId=${source.id}">перейдите по ссылке</a><br>
-Для того, чтобы отписаться от всех уведомлений от системы Service Desk, <a target="blank" href="${link}/unsubscribe?notificationId=${source.id}">перейдите по ссылке</a>.<br>
 <br>
 &nbsp;&nbsp;&nbsp;&nbsp;С уважением, Служба поддержки компании TrackStudio
 </div>
