@@ -14,6 +14,7 @@ import com.trackstudio.exception.UserException;
 import com.trackstudio.external.TaskTrigger;
 import com.trackstudio.kernel.manager.KernelManager;
 import com.trackstudio.secured.SecuredPriorityBean;
+import com.trackstudio.secured.SecuredTaskBean;
 import com.trackstudio.secured.SecuredTaskTriggerBean;
 import com.trackstudio.secured.SecuredUDFBean;
 import com.trackstudio.secured.SecuredUDFValueBean;
@@ -45,10 +46,16 @@ public class NewIncidentProcessing extends CommonITSM implements TaskTrigger {
     		task.setUdfValue(INCIDENT_PHONE_UDF, clientUser.getTel());
     		task.setUdfValue(INCIDENT_COMPANY_UDF, clientUser.getCompany());
         }
-        
-          List<SecuredUDFValueBean> udfvalues = clientUser.getUDFValuesList();
-          applySLA(task, usedPriority, udfvalues);
-
+        SecuredUDFBean bean = AdapterManager.getInstance().getSecuredFindAdapterManager().findUDFById(task.getSecure(), INCIDENT_PRODUCT_UDFID);
+        if (bean!=null){
+        	String CI = task.getUdfValue(bean.getCaption());
+        	if (CI!=null && CI.length()>0){
+        		if (CI.indexOf(";")>-1)  throw new UserException("Нужно выбрать только одну конфигурационную единицу.", false);
+        		SecuredTaskBean b = AdapterManager.getInstance().getSecuredTaskAdapterManager().findTaskByNumber(task.getSecure(), CI);
+        		List<SecuredUDFValueBean> udfvalues = b.getUDFValuesList();
+        			applySLA(task, usedPriority, udfvalues);
+        	}
+        }
         if (task.getHandlerUserId()==null){
             // set Assignee
 
@@ -186,9 +193,9 @@ public class NewIncidentProcessing extends CommonITSM implements TaskTrigger {
                             }
                         }
 
-                    } else throw new UserException("Пользователь с указанным email уже существует. Выберите его из списка или укажите другой email.");
-            } else throw new UserException("Вы должны указать email для нового пользователя");
-        }
+                    } else throw new UserException("Пользователь с указанным email уже существует. Выберите его из списка или укажите другой email.", false);
+                } else throw new UserException("Вы должны указать email для нового пользователя", false);
+            }
         	else {
         		task.setUdfValue(INCIDENT_EMAIL_UDF, clientUser.getEmail());
         		task.setUdfValue(INCIDENT_PHONE_UDF, clientUser.getTel());

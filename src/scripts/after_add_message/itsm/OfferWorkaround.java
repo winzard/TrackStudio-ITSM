@@ -51,6 +51,7 @@ public class OfferWorkaround  extends CommonITSM implements OperationTrigger {
             for (Entry<SecuredUDFValueBean, List<SecuredTaskBean>> entry : refs.entrySet()){
                 if (entry.getKey().getUdfId().equals(relatedUdf.getId())){
             List<SecuredTaskBean> incidentsInvolved = entry.getValue();
+
                 if (incidentsInvolved != null) {
                     for (SecuredTaskBean p : incidentsInvolved) {
                                     executeOperation(WORKAROUND_IN_INCIDENT_OPERATION, p, text, message.getUdfValues());

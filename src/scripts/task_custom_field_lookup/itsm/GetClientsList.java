@@ -24,6 +24,12 @@ public class GetClientsList extends CommonITSM implements TaskUDFLookupScript {
 				list.add(u.getName());
 			}
 		}
+		for (SecuredUserBean u : AdapterManager.getInstance()
+				.getSecuredUserAdapterManager()
+				.getUserAndChildrenList(task.getSecure(), "8a80808a3413e7f50134140255f20005")) {
+					list.add(u.getName());
+
+		}
 		return list;
 	}
 

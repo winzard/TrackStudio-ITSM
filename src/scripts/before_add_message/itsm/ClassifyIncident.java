@@ -11,6 +11,7 @@ import scripts.before_create_task.itsm.NewIncidentProcessing;
 import com.trackstudio.app.adapter.AdapterManager;
 import com.trackstudio.app.csv.CSVImport;
 import com.trackstudio.exception.GranException;
+import com.trackstudio.exception.UserException;
 import com.trackstudio.external.OperationTrigger;
 import com.trackstudio.kernel.manager.KernelManager;
 import com.trackstudio.secured.SecuredMessageTriggerBean;
@@ -79,8 +80,18 @@ public class ClassifyIncident  extends NewIncidentProcessing implements Operatio
             message.setUdfValue(INCIDENT_PHONE_UDF, clientUser.getTel());
             message.setUdfValue(INCIDENT_COMPANY_UDF, clientUser.getCompany());
         }
-            List<SecuredUDFValueBean> udfvalues = clientUser.getUDFValuesList();
-            applySLA(message, usedPriority, udfvalues);
+
+
+        SecuredUDFBean bean = AdapterManager.getInstance().getSecuredFindAdapterManager().findUDFById(message.getSecure(), INCIDENT_PRODUCT_UDFID);
+        if (bean!=null){
+        	String CI = message.getUdfValue(bean.getCaption());
+        	if (CI!=null && CI.length()>0){
+        		if (CI.indexOf(";")>-1)  throw new UserException("Нужно выбрать только одну конфигурационную единицу.", false);
+        		SecuredTaskBean b = AdapterManager.getInstance().getSecuredTaskAdapterManager().findTaskByNumber(message.getSecure(), CI);
+        		List<SecuredUDFValueBean> udfvalues = b.getUDFValuesList();
+        			applySLA(message, usedPriority, udfvalues);
+        	}
+        }
 
 
         if (message.getHandlerUserId()==null){
