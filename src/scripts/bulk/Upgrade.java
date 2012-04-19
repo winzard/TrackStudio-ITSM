@@ -1,9 +1,10 @@
 package scripts.bulk;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -11,13 +12,17 @@ import java.util.regex.Pattern;
 
 import scripts.itsm.CommonITSM;
 
+
 import com.trackstudio.app.adapter.AdapterManager;
 import com.trackstudio.app.csv.CSVImport;
+import com.trackstudio.app.filter.TaskFValue;
 import com.trackstudio.app.session.SessionContext;
 import com.trackstudio.constants.CategoryConstants;
 import com.trackstudio.exception.CantFindObjectException;
 import com.trackstudio.exception.GranException;
 import com.trackstudio.external.TaskBulkProcessor;
+import com.trackstudio.kernel.cache.Action;
+import com.trackstudio.kernel.cache.ActionCacheManager;
 import com.trackstudio.kernel.cache.TaskRelatedManager;
 import com.trackstudio.kernel.cache.UDFCacheItem;
 import com.trackstudio.kernel.manager.KernelManager;
@@ -25,12 +30,19 @@ import com.trackstudio.kernel.manager.SafeString;
 import com.trackstudio.kernel.manager.TSPropertyManager;
 import com.trackstudio.model.Priority;
 import com.trackstudio.model.Udf;
-import com.trackstudio.secured.SecuredPrstatusBean;
+
 import com.trackstudio.secured.SecuredTaskBean;
+import com.trackstudio.secured.SecuredTaskFValueBean;
+import com.trackstudio.secured.SecuredTransitionBean;
 import com.trackstudio.secured.SecuredUDFBean;
 import com.trackstudio.secured.SecuredUDFValueBean;
 import com.trackstudio.secured.SecuredUserAclBean;
+import com.trackstudio.secured.SecuredUserBean;
+import com.trackstudio.securedkernel.SecuredCategoryAdapterManager;
+import com.trackstudio.securedkernel.SecuredFilterAdapterManager;
+import com.trackstudio.securedkernel.SecuredPrstatusAdapterManager;
 import com.trackstudio.securedkernel.SecuredUDFAdapterManager;
+import com.trackstudio.securedkernel.SecuredWorkflowAdapterManager;
 
 public class Upgrade extends CommonITSM implements TaskBulkProcessor {
 	private static Logger log = Logger.getLogger(Upgrade.class.getName());
@@ -51,7 +63,7 @@ public class Upgrade extends CommonITSM implements TaskBulkProcessor {
 	public SecuredTaskBean execute(SecuredTaskBean task) throws GranException {
 		SessionContext sc = task.getSecure();
 		if (checkVersion10()){
-			log.log(Level.INFO, "Обновляем TrackStudio ITSM с 1.0 до 1.2");
+			log.log(Level.INFO, "Обновляем TrackStudio ITSM с 1.0 до 1.2.2");
 		removeInitiatorRole(sc);
 		removeNewUser(sc);
 		modifyClientUDF(sc);
@@ -59,33 +71,64 @@ public class Upgrade extends CommonITSM implements TaskBulkProcessor {
 		rearrangeUDF(sc);
 		moveACL(sc);
 		update11to12(sc);
-		log.log(Level.INFO, "Закончили обновление. Теперь ваша конфигурация соответствует версии 1.2");
+		TSPropertyManager.getInstance().set("ITSM_VERSION", "1.2.2");
+		log.log(Level.INFO, "Закончили обновление. Теперь ваша конфигурация соответствует версии 1.2.2");
 		} else if (checkVersion11()){
-			log.log(Level.INFO, "Обновляем TrackStudio ITSM с 1.1 до 1.2");
+			log.log(Level.INFO, "Обновляем TrackStudio ITSM с 1.1 до 1.2.2");
 			update11to12(sc);
-			log.log(Level.INFO, "Закончили обновление. Теперь ваша конфигурация соответствует версии 1.2");
-		}
-		TSPropertyManager.getInstance().set("ITSM_VERSION", "1.2");
+			TSPropertyManager.getInstance().set("ITSM_VERSION", "1.2.2");
+			log.log(Level.INFO, "Закончили обновление. Теперь ваша конфигурация соответствует версии 1.2.2");
+		
+	} else if (checkVersion12()){
+		log.log(Level.INFO, "Обновляем TrackStudio ITSM с 1.2 до 1.2.2");
+		updateTo122(sc);
+		TSPropertyManager.getInstance().set("ITSM_VERSION", "1.2.2");
+		log.log(Level.INFO, "Закончили обновление. Теперь ваша конфигурация соответствует версии 1.2.2");
+	} else log.log(Level.INFO, "У вас уже и так самая новая версия - 1.2.2");
+		
 		return task;
 	}
 
 	 protected boolean checkVersion10() throws GranException{
+		log.log(Level.INFO, "Проверяем, не является ли ваша TrackStudio ITSM версией 1.0");
 		try{ 
 			if (TSPropertyManager.getInstance().get("ITSM_VERSION")==null){
 		 KernelManager.getFind().findPrstatus(INITIATOR_ROLE);
+		 log.log(Level.INFO, "Так и есть :(");
 		 return true;
-			} else return false;
+			} else {
+				log.log(Level.INFO, "Нет, это не она.");
+				return false;
+			}
 		}
 		 catch (CantFindObjectException ke){
+			 log.log(Level.INFO, "Нет, это не она.");
 			 return false;
 		 }
 	}
+	 protected boolean checkVersion12() throws GranException{
+		 log.log(Level.INFO, "Проверяем, не является ли ваша TrackStudio ITSM версией 1.2");
+			try{ 
+				String version = TSPropertyManager.getInstance().get("ITSM_VERSION");
+				boolean v =  (version!=null && version.equals("1.2"));
+				if (v) log.log(Level.INFO, "Так и есть :(");
+				else log.log(Level.INFO, "Нет, это не она.");
+				return v;
+			}
+			 catch (GranException ke){
+				 log.log(Level.INFO, "Нет, это не она.");
+				 return false;
+			 }
+		}
 	 protected boolean checkVersion11() throws GranException{
+		 log.log(Level.INFO, "Проверяем, не является ли ваша TrackStudio ITSM версией 1.1");
 		 try{
 			KernelManager.getFind().findUdf(INCIDENT_CLIENTDATA_UDFID);
+			log.log(Level.INFO, "Так и есть :(");
 			return true;
 	 }
 	 catch (CantFindObjectException ke){
+		 log.log(Level.INFO, "Нет, это не она.");
 		 return false;
 	 }
 	}
@@ -142,9 +185,156 @@ public class Upgrade extends CommonITSM implements TaskBulkProcessor {
 				addAbilityToEditIncidentType(sc);
 				removeAbilityToEditIncidentType(sc);
 				trimPriorities(sc);
+				updateTo122(sc);
 			}
 			
-		}	 
+		}
+	 private static final String OBSERVER = "ff8081812e5c7497012e5cd72e4c05f5";
+	 private static final String OPERATOR = "ff8081812e5c7497012e5c8dc2eb03b6";
+	 private void updateTo122(SessionContext sc) throws GranException {
+		 addPermissionToThirdLine(sc, INCIDENT_RELATED_PROBLEM_UDFID);
+		 addPermissionToThirdLine(sc, INCIDENT_WORKAROND_UDFID);
+		 makeDuplicateRequired(sc);
+		 changeClientTransition(sc);
+		 fixFilter(sc);
+		 fixITCrowd4(sc);
+		 changeBeforeToAfter(sc);
+		 forbidEditPriority(sc, FIRST_LINE_ROLE_ID);
+		 forbidEditPriority(sc, SECOND_LINE_ROLE_ID);
+		 forbidEditPriority(sc, THIRD_LINE_ROLE_ID);
+		 
+		 forbidEditPriority(sc, CLIENT_ROLE_ID);
+		 
+		 forbidEditPriority(sc, FIRST_LINE_MANAGER_ROLE_ID);
+		 forbidEditPriority(sc, SECOND_LINE_MANAGER_ROLE_ID);
+		 forbidEditPriority(sc, THIRD_LINE_MANAGER_ROLE_ID);
+		 
+		 forbidEditPriority(sc, OPERATOR);
+		 forbidEditPriority(sc, ENGINEER);
+		 forbidEditPriority(sc, MANAGER);
+		 forbidEditPriority(sc, SPECIALIST);
+		 forbidEditPriority(sc, OBSERVER);
+		 
+		 forbidEditBudget(sc, CLIENT_ROLE_ID);
+		 forbidEditBudget(sc, OBSERVER);
+		 removeRegistrationRule(sc);
+		}
+	 /**
+	  * Добавляем жару в третью линию
+	  * @param sc
+	  * @param newUDFId
+	  * @throws GranException
+	  */
+	 private void addPermissionToThirdLine(SessionContext sc, String newUDFId)
+				throws GranException {
+	        		KernelManager.getUdf().setUDFRule(newUDFId, THIRD_LINE_ROLE_ID, CategoryConstants.EDIT_ALL);
+	        		KernelManager.getUdf().setUDFRule(newUDFId, THIRD_LINE_ROLE_ID, CategoryConstants.VIEW_ALL);
+	        		log.log(Level.INFO, "Добавили возможность для третьей линии редактировать дополнительное поле с id '" + newUDFId + "' в инцидентах");
+	         }
+	 /**
+	  * Делаем обязательным поле дублирования проблем
+	  * @param sc
+	  * @throws GranException
+	  */
+	 private void makeDuplicateRequired(SessionContext sc)
+				throws GranException {
+		 SecuredUDFBean udf = AdapterManager.getInstance().getSecuredFindAdapterManager().findUDFById(sc, PROBLEM_DUPLICATE_UDFID);
+		 if (udf!=null){
+		 SecuredUDFAdapterManager suam = AdapterManager.getInstance().getSecuredUDFAdapterManager();
+    		suam.updateWorkflowUdf(sc, udf.getId(), udf.getCaption(), udf.getReferencedbycaption(), udf.getOrder(), udf.getDefaultUDF(),
+                    true, udf.isHtmlview(), udf.getScript(), udf.getLookupscript(), udf.isLookuponly(), udf.isCachevalues(), udf.getInitial());
+	        		log.log(Level.INFO, "Сделали поле \"Дублирует\" в Проблемах обязательным");
+		 }
+	         }
+	 /**
+	  * Исправляем фильтр, по которому клиенту отчеты о решенных инцидентах приходят (в связи с предыдущим изменением перехода)
+	  * @param sc
+	  * @throws GranException
+	  */
+	 private void fixFilter(SessionContext sc)
+				throws GranException {
+		 	String filterId = "ff8081812f00dbda012f00f34be10044";
+		 	SecuredFilterAdapterManager filter = AdapterManager.getInstance().getSecuredFilterAdapterManager();
+		 	SecuredTaskFValueBean fv = filter.getTaskFValue(sc, filterId);
+		 	TaskFValue t = fv.getFValue();
+		 	t.set(TaskFValue.MSG_TYPE, WORKAROUND_IN_INCIDENT_OPERATION);
+		 	KernelManager.getFilter().setFValue(filterId, t);
+	        log.log(Level.INFO, "Исправили фильтр решенных проблем для клиентов");
+		 
+	         }
+	 
+	 /**
+	  * Исправляем фильтр, по которому клиенту отчеты о решенных инцидентах приходят (в связи с предыдущим изменением перехода)
+	  * @param sc
+	  * @throws GranException
+	  */
+	 private void fixITCrowd4(SessionContext sc)
+				throws GranException {
+		 SecuredUserBean user = AdapterManager.getInstance().getSecuredFindAdapterManager().findUserById(sc, "ff8081812f8bae79012f8bb4a1e30028");
+		 if (user!=null){
+		 	AdapterManager.getInstance().getSecuredUserAdapterManager().updateUser(sc, user.getId(), user.getLogin(), user.getName(), user.getTel(), "itcrowd4@localhost", user.getPrstatusId(), user.getManagerId(), user.getTimezone(), user.getLocale(), user.getCompany(), user.getTemplate(), user.getDefaultProjectId(), user.getExpireDate(), user.getPreferences(), user.isEnabled());
+		 	log.log(Level.INFO, "Поменяли одному пользователю email");
+		 }
+		 
+	         }
+/**
+ * Правим переход в Инцидентах, из-за которого правовые коллизии случались
+ * @param sc
+ * @throws GranException
+ */
+	 private void changeClientTransition(SessionContext sc)
+				throws GranException {
+		 SecuredWorkflowAdapterManager securedWorkflowAdapterManager = AdapterManager.getInstance().getSecuredWorkflowAdapterManager();
+		ArrayList<SecuredTransitionBean> list = securedWorkflowAdapterManager.getTransitionList(sc, INCIDENT_FEEDBACK_OPERATION);
+		 
+		 for (SecuredTransitionBean tran : list){
+			 if (tran.getStartId().equals("40288182120444670112290f21a102e6")){
+				 // решен
+				 securedWorkflowAdapterManager.updateTransition(sc, INCIDENT_FEEDBACK_OPERATION, "40288182120444670112290f21a102e6", "40288182120444670112290f21a102e6");
+				 log.log(Level.INFO, "Поменяли переход, приводящий к коллизии");
+	        		break;
+			 }
+		 }
+
+		 
+	         }
+	 private void changeBeforeToAfter(SessionContext sc)
+				throws GranException {
+		 
+		 SecuredCategoryAdapterManager cam = AdapterManager.getInstance().getSecuredCategoryAdapterManager();
+		 cam.setCategoryTrigger(sc, "40288182129efee101129f25c8140064", "itsm.IntroduceClient.class", null, "itsm.ApplySLA.class", null, null, null);
+		 log.log(Level.INFO, "Меняем привязку триггера NewIncidentsProcessing с Before на After");
+	         }
+
+	 private void forbidEditPriority(SessionContext sc, String prstatusId)
+				throws GranException {
+		 SecuredPrstatusAdapterManager pam = AdapterManager.getInstance().getSecuredPrstatusAdapterManager();
+		 
+		 List<String> allowed = new ArrayList<String>();
+		 List<String> denied = new ArrayList<String>();
+		 
+		 denied.add(Action.editTaskPriority.toString());
+		 denied.add(Action.editTaskDeadline.toString());
+		 pam.setRoles(sc, prstatusId, allowed, denied);
+		 
+		 log.log(Level.INFO, "Запретили редактировать приоритет и дедлайн роли "+prstatusId);
+	         }
+	 
+	 private void forbidEditBudget(SessionContext sc, String prstatusId)
+				throws GranException {
+		 SecuredPrstatusAdapterManager pam = AdapterManager.getInstance().getSecuredPrstatusAdapterManager();
+		 
+		 List<String> allowed = new ArrayList<String>();
+		 List<String> denied = new ArrayList<String>();
+		 
+		 denied.add(Action.editTaskBudget.toString());
+		 denied.add(Action.viewTaskBudget.toString());
+		 pam.setRoles(sc, prstatusId, allowed, denied);
+		 
+		 log.log(Level.INFO, "Запретили редактировать бюджет роли "+prstatusId);
+	         }
+	 
+
 	 private void trimPriorities(SessionContext sc) throws GranException{
 		 List<Priority> list = KernelManager.getWorkflow().getPriorityList(INCIDENT_WORKFLOW);
 		 for (Priority p: list){
@@ -152,7 +342,17 @@ public class Upgrade extends CommonITSM implements TaskBulkProcessor {
 		 }
 		 log.log(Level.INFO, "Подрезали лишние пробелы в названиях приоритетов");
 		}
-	 
+	 /**
+	  * Удаляем правило регистрации пользователей
+	  * @param sc
+	  * @throws GranException
+	  */
+	 private void removeRegistrationRule(SessionContext sc)
+				throws GranException {
+		 AdapterManager.getInstance().getSecuredRegistrationAdapterManager().deleteRegistration(sc, "4028818212b7e87b0112bdbcf5a202c0");
+		 log.log(Level.INFO, "Удалили правило саморегистрации");
+		 
+	         }
 	 private void addAbilityToEditIncidentType(SessionContext sc) throws GranException{
 		 KernelManager.getUdf().setMstatusUDFRule(INCIDENT_TYPE_UDFID, "ff8081812f90bce8012f90d1de8f0058", CategoryConstants.EDIT_ALL);	
 		 KernelManager.getUdf().setMstatusUDFRule(INCIDENT_TYPE_UDFID, "ff8081812f90bce8012f90d1de8f0058", CategoryConstants.VIEW_ALL);
@@ -361,9 +561,9 @@ private void rearrangeUDF(SessionContext sc) throws GranException {
 	}
 	return null;
 	}
-	private static final String MANAGER = "297eef002e0058c6012e00802dcc0997";
 	private static final String SPECIALIST = "ff8081812e80827a012e8110f1ca0100";
 	private static final String ENGINEER = "ff8081812ea45053012ea46f2684005f";
+	private static final String MANAGER = "297eef002e0058c6012e00802dcc0997";
 	
 		private void copyAccessToClients(SessionContext sc) throws GranException {
         SecuredUserAclBean sourceAcl = AdapterManager.getInstance().getSecuredFindAdapterManager().findUserAclById(sc, "ff8081812e6bb868012e6c67183705e9");

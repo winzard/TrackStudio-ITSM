@@ -29,14 +29,19 @@ public class OfferWorkaround  extends CommonITSM implements OperationTrigger {
     public SecuredMessageTriggerBean executeIncident(SecuredMessageTriggerBean message) throws GranException {
         String text = message.getDescription();
         SecuredTaskBean task = message.getTask();
+        SecuredUDFBean duplicateUdf = AdapterManager.getInstance().getSecuredFindAdapterManager().findUDFById(task.getSecure(), PROBLEM_DUPLICATE_UDFID);
+        if (message.getUdfValue(duplicateUdf.getCaption())==null){
         SecuredUDFValueBean relatedProblems = task.getUDFValues().get(INCIDENT_RELATED_PROBLEM_UDFID);
                 Object value = relatedProblems.getValue();
                 List<SecuredTaskBean> problemsInvolved = null;
                 if (value != null) {
                     problemsInvolved = (List<SecuredTaskBean>) value;
                     for (SecuredTaskBean p : problemsInvolved) {
+                    	SecuredUDFValueBean udf = p.getUDFValues().get(PROBLEM_WORKAROND_UDFID);
+                    	if (udf==null || udf.getValue()==null)
                                     executeOperation(WORKAROUND_IN_PROBLEM_OPERATION, p, text, message.getUdfValues());
                     }
+        }
         }
         return message;
     }
@@ -53,6 +58,8 @@ public class OfferWorkaround  extends CommonITSM implements OperationTrigger {
             List<SecuredTaskBean> incidentsInvolved = entry.getValue();
                 if (incidentsInvolved != null) {
                     for (SecuredTaskBean p : incidentsInvolved) {
+                    	SecuredUDFValueBean udf = p.getUDFValues().get(INCIDENT_WORKAROND_UDFID);
+                    	if (udf==null || udf.getValue()==null)
                                     executeOperation(WORKAROUND_IN_INCIDENT_OPERATION, p, text, message.getUdfValues());
                             }
                 }
