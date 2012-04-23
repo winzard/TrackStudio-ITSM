@@ -24,7 +24,7 @@ import com.trackstudio.secured.SecuredUDFValueBean;
  * Common class for ITSM configuration
  */
 public class CommonITSM {
-    private static Properties properties = null;
+    protected static Properties properties = null;
 
     {
         try {
