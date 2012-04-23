@@ -35,6 +35,7 @@ public class CommonITSM {
 
         }
     }
+   
     public static final String EMAIL_PATTERN = "электронная почта:\\s*\\\"?(\\S+\\s*\\S+[^\\\"])?\\\"?\\s+(<|&lt;)?(([-A-Za-z0-9!#$%&'*+/=?^_`{|}~]+(\\.[-A-Za-z0-9!#$%&'*+/=?^_`{|}~]+)*)@([A-Za-z0-9.]+))(&gt;|>)?\\r?\\n";
 	public static final String PHONE_PATTERN = "телефон:\\s*([0-9\\+\\s\\-\\(\\)]+)+\\r?\\n";
 	public static final String COMPANY_PATTERN = "компания:\\s*(\\S+[\\s\\S]*?)\\r?\\n";
@@ -45,6 +46,8 @@ public class CommonITSM {
     protected String INCIDENT_CLIENT_UDF = "Клиент";
     protected String INCIDENT_CLIENTLINK_UDF = "Ссылка на клиента";
     protected String INCIDENT_CLIENTLINK_UDFID = "ff8081812e6bb868012e6c5fe88205ae"; 
+    
+    protected String INCIDENT_FEEDBACK_OPERATION = "ff8081812ed77864012ed7984c6e00fb";
     
     protected String INCIDENT_CLIENTDATA_UDFID = "ff8081812e6bb868012e6bc433ce0006";
     protected String INCIDENT_EMAIL_UDF = "Электронная почта клиента";
@@ -101,6 +104,7 @@ public class CommonITSM {
 
     public CommonITSM() {
         if (properties != null) {
+        	
             INCIDENT_PRODUCT_UDFID = properties.getProperty("itsm.incident.udf.product");
             INCIDENT_TYPE_UDFID = properties.getProperty("itsm.incident.udf.type");
             WORKAROUND_PRODUCT_UDFID = properties.getProperty("itsm.workaround.udf.product");
