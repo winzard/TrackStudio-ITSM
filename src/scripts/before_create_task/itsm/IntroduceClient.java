@@ -8,9 +8,7 @@ import com.trackstudio.exception.GranException;
 import com.trackstudio.exception.UserException;
 import com.trackstudio.external.TaskTrigger;
 import com.trackstudio.kernel.manager.KernelManager;
-import com.trackstudio.secured.SecuredPriorityBean;
 import com.trackstudio.secured.SecuredTaskTriggerBean;
-import com.trackstudio.secured.SecuredUDFBean;
 import com.trackstudio.secured.SecuredUDFValueBean;
 import com.trackstudio.secured.SecuredUserBean;
 import com.trackstudio.tools.Null;
@@ -35,8 +33,6 @@ public SecuredTaskTriggerBean execute(SecuredTaskTriggerBean task) throws GranEx
     		task.setUdfValue(INCIDENT_COMPANY_UDF, clientUser.getCompany());
         }
         
-          List<SecuredUDFValueBean> udfvalues = clientUser.getUDFValuesList();
-
         if (task.getHandlerUserId()==null){
             // set Assignee
 
