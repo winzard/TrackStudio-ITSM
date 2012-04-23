@@ -75,7 +75,7 @@ protected void introduceNewClient(SecuredTaskTriggerBean task, String client) th
                 }
 
                         AdapterManager.getInstance().getAuthAdapterManager().changePassword(id, pwd);
-                        KernelManager.getRegistration().sendRegisterMessage(id, pwd);
+                       if (properties.getProperty("itsm.send.registration")!=null) KernelManager.getRegistration().sendRegisterMessage(id, pwd);
                     } catch (Exception e) {
                         e.printStackTrace();  
                     }

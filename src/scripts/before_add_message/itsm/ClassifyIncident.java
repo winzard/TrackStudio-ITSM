@@ -1,15 +1,10 @@
 package scripts.before_add_message.itsm;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import scripts.after_create_task.itsm.ApplySLA;
 
 import com.trackstudio.app.adapter.AdapterManager;
-import com.trackstudio.app.csv.CSVImport;
 import com.trackstudio.exception.GranException;
 import com.trackstudio.exception.UserException;
 import com.trackstudio.external.OperationTrigger;
