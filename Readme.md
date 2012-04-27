@@ -17,7 +17,7 @@
 На этапе ознакомления с продуктом мы рекомендуем использовать вариант Standalone.
 Вариант WAR предназначен для запуска под имеющимся у вас сервером приложений (обычно это Tomcat). Он содержит не скомпилированные JSP, которые Tomcat собирает сам. Этот вариант настраивается путем редактирования файлов properties. Вы также можете перенести предварительно настроенные в Server Manager файлы properties с другой машины.
 
-[скачать TrackStudio](http://www.trackstudio.ru/products-edownload.html)
+[скачать TrackStudio](http://www.trackstudio.ru/products-edownload.html) [скачать конфигурацию ITSM v. 1.2.2](https://github.com/downloads/winzard/TrackStudio-ITSM/itsm-1.2.2.zip)
 
 #Установка TrackStudio Service Desk
 
