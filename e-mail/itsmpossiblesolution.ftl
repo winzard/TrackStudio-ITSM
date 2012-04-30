@@ -8,7 +8,7 @@
 </#if>
 <html>
 <body>
-<#if ${user.prstatus.id eq "402881821204446701124cffdf95036d"}>
+<#if user.prstatus.id == "402881821204446701124cffdf95036d">
 <h2>Найдено возможное решение</h2>
 
 <div>Уважаемый(ая) ${user.name}<br>

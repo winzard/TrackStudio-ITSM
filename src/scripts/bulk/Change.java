@@ -1,5 +1,6 @@
 package scripts.bulk;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -13,14 +14,18 @@ import com.trackstudio.app.session.SessionContext;
 import com.trackstudio.constants.CategoryConstants;
 import com.trackstudio.exception.GranException;
 import com.trackstudio.external.TaskBulkProcessor;
+import com.trackstudio.kernel.cache.Action;
 import com.trackstudio.kernel.manager.KernelManager;
 import com.trackstudio.secured.SecuredCategoryBean;
 import com.trackstudio.secured.SecuredPrstatusBean;
 import com.trackstudio.secured.SecuredTaskBean;
 import com.trackstudio.secured.SecuredUDFBean;
 import com.trackstudio.secured.SecuredUserUDFBean;
+import com.trackstudio.securedkernel.SecuredPrstatusAdapterManager;
 
 public class Change extends CommonITSM implements TaskBulkProcessor {
+	protected static final String GENERAL_USER = "4028802833a09ed20133a2117fb10414";
+	protected static final String OBSERVER = "ff8081812e5c7497012e5cd72e4c05f5";
 	private static Logger log = Logger.getLogger(Upgrade.class.getName());
 	
 	
@@ -32,18 +37,36 @@ public class Change extends CommonITSM implements TaskBulkProcessor {
 		moveSLAtoCI(sc);
 		addACLtoUsers(sc);
 		addACLtoClients(sc);
+		allowCreateUsers(sc);
 		log.log(Level.INFO, "Закончили обновление");
 		return task;
 	}
+	
+	private void allowCreateUsers(SessionContext sc)
+			throws GranException {
+	 SecuredPrstatusAdapterManager pam = AdapterManager.getInstance().getSecuredPrstatusAdapterManager();
+	 
+	 List<String> allowed = new ArrayList<String>();
+	 List<String> denied = new ArrayList<String>();
+	 
+	 allowed.add(Action.editUserHimself.toString());
+	 allowed.add(Action.editUserChildren.toString());
+	 allowed.add(Action.createUser.toString());
+	 
+	 
+	 pam.setRoles(sc, OBSERVER, allowed, denied);
+
+         }
+	
 	private void addACLtoUsers(SessionContext sc) throws GranException{
 		String aclid = AdapterManager.getInstance().getSecuredAclAdapterManager().createAcl(sc, null, "8a80808a3413e7f50134140255f20005",
-                null, "4028802833a09ed20133a2117fb10414");
-         AdapterManager.getInstance().getSecuredAclAdapterManager().updateUserAcl(sc, aclid, "4028802833a09ed20133a2117fb10414", false);
+                null, GENERAL_USER);
+         AdapterManager.getInstance().getSecuredAclAdapterManager().updateUserAcl(sc, aclid, GENERAL_USER, false);
 	}
 	private void addACLtoClients(SessionContext sc) throws GranException{
 		String aclid = AdapterManager.getInstance().getSecuredAclAdapterManager().createAcl(sc, null, CLIENT_ROOT_ID,
-                null, "4028802833a09ed20133a2117fb10414");
-         AdapterManager.getInstance().getSecuredAclAdapterManager().updateUserAcl(sc, aclid, "ff8081812e5c7497012e5cd72e4c05f5", false);
+                null, GENERAL_USER);
+         AdapterManager.getInstance().getSecuredAclAdapterManager().updateUserAcl(sc, aclid, OBSERVER, false);
 	}
 	private void setPermissionUDF(SessionContext sc, String newUDFId)
 			throws GranException {

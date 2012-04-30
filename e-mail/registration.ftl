@@ -1,7 +1,7 @@
 <#assign ContentType="text/html;\n charset=\"${charset}\""/>
 <#assign Subject="Вы зарегистрированы в службе поддержки компании TrackStudio. [__]"/>
 <html><body>
-<#if ${user.prstatus.id eq "402881821204446701124cffdf95036d"}>
+<#if user.prstatus.id == "402881821204446701124cffdf95036d">
 <h2>Регистрация учетной записи</h2>
 Здравствуйте, ${user.name}<br>
 Служба поддержки компании TrackStudio зарегистрировала для вас учетную запись.<br>
