@@ -13,6 +13,7 @@ import com.trackstudio.secured.SecuredTaskTriggerBean;
 import com.trackstudio.secured.SecuredUDFBean;
 import com.trackstudio.secured.SecuredUDFValueBean;
 import com.trackstudio.secured.SecuredUserBean;
+import com.trackstudio.startup.Config;
 import com.trackstudio.tools.Null;
 
 import scripts.itsm.CommonITSM;
@@ -75,7 +76,7 @@ protected void introduceNewClient(SecuredTaskTriggerBean task, String client) th
                 }
 
                         AdapterManager.getInstance().getAuthAdapterManager().changePassword(id, pwd);
-                       if (properties.getProperty("itsm.send.registration")!=null) KernelManager.getRegistration().sendRegisterMessage(id, pwd);
+                       if (Config.getProperty("itsm.send.registration")!=null) KernelManager.getRegistration().sendRegisterMessage(id, pwd);
                     } catch (Exception e) {
                         e.printStackTrace();  
                     }

@@ -385,7 +385,7 @@ public class Upgrade extends CommonITSM implements TaskBulkProcessor {
 	}
 	private void modifyClientUDF(SessionContext sc) throws GranException{
 		SecuredUDFAdapterManager suam = AdapterManager.getInstance().getSecuredUDFAdapterManager();
-		suam.updateWorkflowUdf(sc, INCIDENT_CLIENTLINK_UDFID, INCIDENT_CLIENTLINK_UDF, "Инциденты клиента", 0, "", false, false, "itsm.ClientLink.class", null, false, false, null);
+		suam.updateWorkflowUdf(sc, INCIDENT_CLIENTLINK_UDFID, INCIDENT_CLIENTLINK_UDF, "Инциденты клиента", 0, "", false, false, "itsm.ClientLink.class", null, false, false, "1");
 		log.log(Level.INFO, "Изменили тип поля Клиент и переименовали его в Ссылку на клиента");
 	}
 	private void createGroupACL(SessionContext sc, String taskId, String groupId, String prstatusId) throws GranException{
