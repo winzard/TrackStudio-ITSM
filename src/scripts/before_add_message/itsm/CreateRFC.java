@@ -22,10 +22,11 @@ import com.trackstudio.secured.SecuredUserBean;
 
 public class CreateRFC extends CommonITSM implements OperationTrigger {
     public SecuredMessageTriggerBean execute(SecuredMessageTriggerBean message) throws GranException {
-        String text = message.getDescription();
+        String txt = message.getDescription();
+        
         SecuredTaskBean task = message.getTask();
         SecuredUDFBean relatedUdf = AdapterManager.getInstance().getSecuredFindAdapterManager().findUDFById(task.getSecure(), PROBLEM_RFC_UDFID);
-        if (text!=null && text.length()>0){
+        
             HashMap<String, String> udfMap = new HashMap<String, String>();
 
             SecuredUDFValueBean udf = task.getUDFValues().get(PROBLEM_PRODUCT_UDFID);
@@ -61,13 +62,13 @@ public class CreateRFC extends CommonITSM implements OperationTrigger {
                 if (peek!=null)
                 handlerGroup = ((SecuredPrstatusBean)peek).getId();
             }
-             SecuredTaskTriggerBean rfc = new SecuredTaskTriggerBean(RFC_ROOT_ID, text,message.getTask().getName(),
+             SecuredTaskTriggerBean rfc = new SecuredTaskTriggerBean(RFC_ROOT_ID, txt,message.getTask().getName(),
 null, null, null, null, null, null,
 task.getDeadline(), null, message.getSubmitterId(), null,
 handlerUser, handlerGroup, RFC_ROOT_ID, RFC_CATEGORY_ID,
 null, null, null,  null,  udfMap, message.getSecure()).create();
             message.setUdfValue(relatedUdf.getCaption(), "#" +rfc.getNumber());
-        }
+        
 
 
         return message;

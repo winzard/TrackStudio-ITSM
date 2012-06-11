@@ -22,12 +22,15 @@ import com.trackstudio.secured.SecuredUserBean;
 
 public class CreateProblem extends CommonITSM implements OperationTrigger {
     public SecuredMessageTriggerBean execute(SecuredMessageTriggerBean message) throws GranException {
-        String text = message.getDescription();
+    	StringBuffer description = new StringBuffer();
+        String txt = message.getDescription();
+        if (txt!=null) description.append(txt);
         SecuredTaskBean task = message.getTask();
         SecuredUDFBean relatedUdf = AdapterManager.getInstance().getSecuredFindAdapterManager().findUDFById(task.getSecure(), INCIDENT_RELATED_PROBLEM_UDFID);
-        text+="<BR>"+task.getDescription();
+            	txt=task.getDescription();
+            	if (txt!=null) description.append("<br/>").append(txt);
         if (message.getUdfValue(relatedUdf.getCaption())==null || message.getUdfValue(relatedUdf.getCaption()).length()==0){
-        if (text!=null && text.length()>0){
+        
             HashMap<String, String> udfMap = new HashMap<String, String>();
 
             SecuredUDFValueBean udf = task.getUDFValues().get(INCIDENT_PRODUCT_UDFID);
@@ -64,7 +67,7 @@ public class CreateProblem extends CommonITSM implements OperationTrigger {
                 if (peek!=null)
                 handlerGroup = ((SecuredPrstatusBean)peek).getId();
             }
-             SecuredTaskTriggerBean problem = new SecuredTaskTriggerBean(PROBLEM_ROOT_ID, text,message.getTask().getName(),
+             SecuredTaskTriggerBean problem = new SecuredTaskTriggerBean(PROBLEM_ROOT_ID, description.toString(),message.getTask().getName(),
 null, null, null, null, null, null,
 task.getDeadline(), null, message.getSubmitterId(), null,
 handlerUser, handlerGroup, PROBLEM_ROOT_ID, PROBLEM_CATEGORY_ID,
@@ -72,7 +75,7 @@ null, null, null,  null,  udfMap, message.getSecure()).create();
             message.setUdfValue(relatedUdf.getCaption(), "#" +problem.getNumber());
             message.setHandlerGroupId(handlerGroup);
             message.setHandlerUserId(handlerUser);
-        }
+        
             return message;
     } else
         // set Assignee to one of third linersе

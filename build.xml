@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="TrackStudio-ITSM">
+    <property environment="env"/>
+	<property name="project.dir" value="."/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.7"/>
+	<property name="version" value="1.2.3"/>
+    <property name="source" value="1.7"/>
+	<property name="temp.dir" value="${project.dir}/out"/>
+	<property name="templates.dir" value="${project.dir}/e-mail"/>
+	<property name="src.dir" value="${project.dir}/src"/>
+    
+	<path id="TrackStudio-ITSM.classpath">
+        <pathelement location="${temp.dir}"/>
+        <pathelement location="${project.dir}/trackstudio.jar"/>
+    </path>
+    <target name="init">
+        <mkdir dir="${temp.dir}"/>
+        <copy includeemptydirs="false" todir="${temp.dir}}">
+            <fileset dir="${src.dir}">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+	
+    <target name="clean">
+        <delete dir="${temp.dir}"/>
+    	<delete file="${project.dir}/itsm-email-templates.zip"/>
+    	<delete file="${project.dir}/itsm.jar"/>
+    	
+    </target>
+    <target depends="clean" name="cleanall"/>
+    
+    
+    <target depends="init" name="build">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="${temp.dir}" source="${source}" target="${target}">
+            <src path="${src.dir}"/>
+            <classpath refid="TrackStudio-ITSM.classpath"/>
+        </javac>
+    	<jar basedir="${temp.dir}" jarfile="${project.dir}/itsm.jar"/>
+    </target>
+	
+	 <target name="templates">
+	    	<zip destfile="${project.dir}/itsm-email-templates.zip" basedir="${templates.dir}"/>
+	    </target>
+	
+	 <target name="dist" depends="build, templates">
+		    	<zip destfile="${project.dir}/itsm-${version}.zip">
+		    		<fileset dir="${project.dir}">
+		    		<include name="itsm-email-templates.zip"/>
+		    		<include name="itsm.jar"/>
+		    		<include name="configuration.odt"/>
+		    		<include name="trackstudioservicedesk.pdf"/>
+		    		<include name="itsm-db-demo.zip"/>
+		    		<include name="itsm-db-clean.zip"/>
+		    		<include name="Readme.md"/>
+		    			</fileset>
+		    		</zip>
+		    </target>
+</project>
